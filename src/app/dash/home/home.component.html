@@ -1,0 +1,60 @@
+<div class="container-fluid main">
+    <h2 class="dash-title text-center">Welcome to the Dashboard</h2>
+    <!-- put your rows / columns here -->
+    <div class="col-lg-4 right">
+        <div class="card spur-card">
+            <div class="card-header bg-secondary text-white">
+                <div class="spur-card-icon">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="spur-card-title"> Candidate Details </div>
+            </div>
+            <div class="card-body bg-secondary text-white" *ngIf="cards"> 
+             <ul>
+                 <li>{{cards.full_name | uppercase}}</li>
+                 <li>{{cards.email}}</li>
+             </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-4 second">
+            <div class="card spur-card">
+                <div class="card-header bg-success text-white">
+                    <div class="spur-card-icon">
+                        <i class="far fa-check-circle"></i>
+                    </div>
+                    <div class="spur-card-title"> Top 3 Subjects </div>
+                </div>
+                <div class="card-body" *ngIf="cards2"> 
+                    <ul style="list-style-type:none;">
+                        
+                        <li class="text-success  font-weight-bold" *ngFor="let val of cards2.top_three.response; let i = index">{{ val.subject_name}}({{val.average}}) - {{val.term_name}}</li>
+                    </ul>    
+                </div>
+            </div>
+    </div>
+    <div class = "row mt-2">
+        <div class="col-lg-4 mt-3 third">
+            <div class="card spur-card">
+                <div class="card-header bg-danger text-white">
+                    <div class="spur-card-icon">
+                        <i class="far fa-frown-open"></i>
+                    </div>
+                    <div class="spur-card-title"> Needs to Improve </div>
+                </div>
+                <div class="card-body" *ngIf = "cards2"> 
+                    <ul style="list-style-type:none;">
+                        <li class="text-danger font-weight-bold" *ngFor="let val of cards2.bottom_three.response; let i = index">{{ val.subject_name}}({{val.average}}) - {{val.term_name}}</li>
+                    </ul>    
+                </div>
+            </div>
+        </div>
+    </div>
+            
+      
+    
+    
+    
+</div>
