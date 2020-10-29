@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 
-
 @Component({
   selector: 'app-dash',
   templateUrl: './dash.component.html',
@@ -8,14 +7,9 @@ import { Component, OnInit } from '@angular/core';
 })
 export class DashComponent implements OnInit {
   showSideMenu:boolean=false;
+  constructor() { }
 
-  
-
-constructor() { }
-
- 
-  
-ngOnInit(): void {
+  ngOnInit(): void {
   }
 
 }
