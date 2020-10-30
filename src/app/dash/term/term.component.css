@@ -2,11 +2,6 @@
     position: relative;
 }
 
-.cardDetails{
-    position: absolute;
-    top: 1px;
-    right: 0;
-}
 
 tbody{
     cursor: pointer;
@@ -17,3 +12,6 @@ table{
     text-align: center;
 }
 
+.modal.show{
+    display: block;
+}

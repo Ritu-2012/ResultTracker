@@ -1,4 +1,9 @@
-<div class="container">
+<div class="container-fluid">
+  <h1 class="dash-title">Terms</h1>
+  <p class="mb-5">
+    Here you will find all the data related to your terms and see marks
+    accouding to the selected term.
+  </p>
   <div class="row">
     <div class="col-xl-6">
       <div class="card spur-card">
@@ -6,58 +11,115 @@
           <div class="spur-card-icon">
             <i class="fas fa-chart-bar"></i>
           </div>
-          <div class="spur-card-title">Subject marks from Term</div>
+          <div class="spur-card-title">Subject marks from {{ term_name }}</div>
         </div>
         <div class="card-body">
-  
-          <div id="chart" *ngIf="chartOptions">
-              <apx-chart
-                [series]="chartOptions.series"
-                [chart]="chartOptions.chart"
-                [dataLabels]="chartOptions.dataLabels"
-                [plotOptions]="chartOptions.plotOptions"
-                [xaxis]="chartOptions.xaxis"
-                [yaxis]="chartOptions.yaxis"
-                [stroke]="chartOptions.stroke"
-              ></apx-chart>
+          <div class="spinner text-center" *ngIf="!chartOptions">
+            <div
+              class="spinner-grow text-secondary"
+              style="width: 3rem; height: 3rem"
+              role="status"
+            >
+              <span class="sr-only">Loading...</span>
             </div>
-            
-  
-  
+          </div>
+          <div id="chart" *ngIf="chartOptions">
+            <apx-chart
+              [series]="chartOptions.series"
+              [chart]="chartOptions.chart"
+              [dataLabels]="chartOptions.dataLabels"
+              [plotOptions]="chartOptions.plotOptions"
+              [xaxis]="chartOptions.xaxis"
+              [yaxis]="chartOptions.yaxis"
+              [stroke]="chartOptions.stroke"
+            ></apx-chart>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-6 cardDetails">
+      <div class="card spur-card">
+        <div class="card-header bg-warning text-white">
+          <div class="spur-card-icon">
+            <i class="fas fa-clipboard"></i>
+          </div>
+          <div class="spur-card-title">Term List</div>
+          <div class="spur-card-menu">
+            <button type="button" class="btn btn-success" (click)= "showModal=true" data-toggle="modal" data-target="#myModal">Add Term</button>
+          </div>
+        </div>
+        <div class="card-body">
+            <div class="spinner text-center" *ngIf="!termData">
+                <div
+                  class="spinner-grow text-secondary"
+                  style="width: 3rem; height: 3rem"
+                  role="status"
+                >
+                  <span class="sr-only">Loading...</span>
+                </div>
+              </div>
+          <table class="table table-hover table-in-card" *ngIf="termData">
+            <thead>
+              <tr>
+                <th scope="col" class="text"><span>#</span></th>
+                <th scope="col" class="text"><span>Term Name</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                *ngFor="let val of termData; let i = index"
+                routerLink="/dash/term/{{ val.term_id }}"
+              >
+                <th class="text">
+                  <span>{{ i + 1 }}</span>
+                </th>
+                <td class="text">
+                  <span>{{ val.term_name }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
   </div>
-
-  <div class="col-xl-6 cardDetails">
-    <div class="card spur-card">
-      <div class="card-header bg-warning text-white">
-        <div class="spur-card-icon">
-          <i class="fas fa-clipboard"></i>
-        </div>
-        <div class="spur-card-title">Term List</div>
-      </div>
-      <div class="card-body">
-        <table class="table table-hover table-in-card">
-          <thead>
-            <tr>
-              <th scope="col" class="text"><span>#</span></th>
-              <th scope="col" class="text"><span>Term Name</span></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let val of termData; let i = index" routerLink = "/dash/term/{{val.term_id}}">
-              <th class="text">
-                <span>{{ i + 1 }}</span>
-              </th>
-              <td class="text">
-                <span>{{ val.term_name }}</span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-  
 </div>
+
+
+<!-- The Modal -->
+<div class="modal" id="myModal" [ngClass]="{'show':showModal}">
+  <div class="modal-dialog">
+    <div class="modal-content">
+
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <h4 class="modal-title">Add Term</h4>
+        <button type="button" class="close" (click)="showModal=false" data-dismiss="modal">&times;</button>
+      </div>
+
+      <!-- Modal body -->
+      <div class="modal-body">
+        <form #userpost = "ngForm" [formGroup]="form" (ngSubmit)="onSubmit(userpost.value)">
+          <div class="form-group">
+            <label for="exampleInputEmail1" class="font-weight-bold">Term Name : </label>
+            <input type="text" class="form-control" formControlName="Name" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Enter Term">
+            <div *ngIf="Name.touched && !(Name.valid)" class="alert alert-danger" >
+              <div *ngIf="Name.errors?.required">Term Name is required</div>
+              <div *ngIf="Name.errors.maxlength">Name must be maximum 30 characters</div>
+            </div>
+          </div>
+          <div class="forms-group text-center">
+            <button [disabled]="!form.valid" class="btn btn-primary mr-3" type="submit">Submit</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Modal footer 
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-danger" (click)="showModal=false" data-dismiss="modal">Close</button>
+      </div>-->
+
+    </div>
+  </div>
+</div>
+

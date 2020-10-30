@@ -1,3 +1,4 @@
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
@@ -11,7 +12,10 @@ import { NgApexchartsModule } from 'ng-apexcharts';
   imports: [
     CommonModule,
     TermRoutingModule,
-    NgApexchartsModule 
+    NgApexchartsModule,
+    FormsModule,
+    ReactiveFormsModule
+
   ]
 })
 export class TermModule { }

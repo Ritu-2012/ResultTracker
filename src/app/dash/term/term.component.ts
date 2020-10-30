@@ -1,5 +1,6 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { ActivatedRoute, ParamMap, Params } from '@angular/router';
+import{ FormGroup, FormControl, Validators } from '@angular/forms';
+import { ActivatedRoute, ParamMap, Params, Router } from '@angular/router';
 import {
   ApexAxisChartSeries,
   ApexChart,
@@ -11,6 +12,8 @@ import {
   ApexYAxis,
 } from 'ng-apexcharts';
 import { TermService } from './term.service';
+import { from } from 'rxjs';
+import { conditionallyCreateMapObjectLiteral } from '@angular/compiler/src/render3/view/util';
 
 export type ChartOptions = {
   series: ApexAxisChartSeries;
@@ -27,35 +30,56 @@ export type ChartOptions = {
   templateUrl: './term.component.html',
   styleUrls: ['./term.component.css'],
 })
+
 export class TermComponent implements OnInit {
+
+websiteList:any= ['chemistry', 'english', 'computer','biology']
+
+
   @ViewChild('chart') chart: ChartComponent;
   public chartOptions: Partial<ChartOptions>;
+  termData; 
+  terms;
 
-  termData=[];
+  constructor(private dataService: TermService, private route: ActivatedRoute, private router:Router) {}
 
-  constructor(private dataService: TermService, private route: ActivatedRoute) {}
+  public showModal : boolean = false;
+  
 
   series: { name: string; data: number[] }[] = [];
 
   subjects: string[] = [];
   
   user_id: string;
+  paramLoaded:boolean=false;
   pwd: string;
+  term_name:string="";
   ngOnInit(): void {
     
     this.user_id = localStorage.getItem('user_id');
     this.pwd = localStorage.getItem('pwd');
 
+    
+
 
     this.route.paramMap.subscribe((item:any)=>{
       if(item.params.id){
-        this.loadChart(item.params.id)
+        this.loadChart(item.params.id);
+        this.paramLoaded=true;
       }
     })
 
+    
+    
+
+    
+
     this.dataService
         .getTermInfo(this.user_id,  this.pwd)
-        .subscribe((response : any) => (this.termData = response.response));
+        .subscribe((response : any) => {
+          if(!this.paramLoaded)
+          this.router.navigate(["dash","term",response.response[0].term_id])
+          this.termData = response.response;});
 
     
   }
@@ -71,6 +95,7 @@ export class TermComponent implements OnInit {
   setupData(data: any) {
     let exam = data.exam;
     console.log(data);
+    this.term_name=data.marks.length>0? (data.marks[0].length>0?data.marks[0][0].term_name:""):"";
     exam.forEach((exam_item: any) => {
       let full_marks = exam_item.full_marks;
       for (let i = 0; i < exam_item.exam_no; i++) {
@@ -143,5 +168,35 @@ export class TermComponent implements OnInit {
         max: 100,
       },
     };
+    //Fixing chart display issue for small screen
+    setTimeout(()=>{
+
+      window.dispatchEvent( new Event('resize'));
+    },100)
+  }
+
+  form = new FormGroup({
+    "Name": new FormControl('', [Validators.required])
+  });
+
+  get Name(){
+    return this.form.get("Name");
+  }
+
+  onSubmit(data){
+    if(this.form.valid){
+      console.log(JSON.stringify(data));
+      this.showModal=false;
+
+      if (localStorage.getItem('user_id')) {
+        this.user_id = localStorage.getItem('user_id');
+        this.pwd = localStorage.getItem('pwd');
+        this.dataService.addTerm(this.user_id,this.pwd,data).subscribe((response: any) => {this.terms = response.response;
+        console.log(response);})
+    }
   }
 }
+  
+}
+
+
