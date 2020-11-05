@@ -13,6 +13,7 @@ import {
   ApexYAxis,
 } from 'ng-apexcharts';
 import { TermService } from './term.service';
+import { ToastrService } from 'ngx-toastr';
 
 export type ChartOptions = {
   series: ApexAxisChartSeries;
@@ -40,12 +41,25 @@ export class TermComponent implements OnInit {
   deleteTermModal = false;
   showTermModal = false;
   termMarks;
-  current_term ;
   constructor(
+    private toastr: ToastrService,
     private termService: TermService,
     private route: ActivatedRoute,
     private router: Router
   ) {}
+
+  showToastr(){
+    this.toastr.success('Term added successfully');
+    
+  }
+
+  showToastr2(){
+    this.toastr.warning('Term deleted successfully');
+  }
+
+  showToastr3(){
+    this.toastr.success('Term updated successfully');
+  }
 
   
 
@@ -196,7 +210,7 @@ export class TermComponent implements OnInit {
     this. showEditTermModal=true;
     this.term_id=id;
     this.term_name=name;
-    this.editTermForm.get("term_name").setValue(this.current_term);
+    this.editTermForm.get("term_name").setValue(this.term_name);
     this.termService
       .getTermList(this.user_id, this.pwd)
       .subscribe((response: any) => {​

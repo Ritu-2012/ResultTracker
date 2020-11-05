@@ -256,8 +256,6 @@ export class SubjectComponent implements OnInit {​
         this.loadSubjectListAny();
       }​);
   }​
-
-  
   changeTermId(e) {​
     console.log(e.target.value);
     this.addSubjectForm.get('term_id').setValue(e.target.value, {​
