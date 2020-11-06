@@ -66,11 +66,11 @@
         </div>
         <div
             class="card-body"
-            *ngIf="subjectListAny && subjectListAny.length <= 0"
+            *ngIf="PieData && PieData.response.length <= 0"
           >
             Please add your exam structure details
         </div>
-        <div class="card-body"*ngIf="subjectListAny && subjectListAny.length > 0">
+        <div class="card-body"*ngIf="PieData && PieData.response.length > 0">
           
           <div class="spinner text-center" *ngIf="!chartOptions1">
             <div
@@ -352,7 +352,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">Add Exam Structure</h5>
-        <button type="button" class="close" (click)="showExamModal = false">
+        <button type="button" class="close" (click)="closeExamAddModal()">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
@@ -427,7 +427,7 @@
         <button
           type="button"
           class="btn btn-danger"
-          (click)="showExamModal = false"
+          (click)="closeExamAddModal()"
           data-dismiss="modal"
         >
           Close
@@ -443,7 +443,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">Delete Exam</h5>
-        <button type="button" class="close" (click)="showDeleteExamModal = false">
+        <button type="button" class="close" (click)="closeExamDeleteModal()">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
@@ -505,7 +505,7 @@
         <button
           type="button"
           class="btn btn-danger"
-          (click)="showDeleteExamModal = false"
+          (click)="closeExamDeleteModal()"
           data-dismiss="modal"
         >
           Close
@@ -520,7 +520,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">Update Exam Name</h5>
-        <button type="button" class="close" (click)="showEditExamModal = false">
+        <button type="button" class="close" (click)="closeExamEditModal()">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
@@ -610,7 +610,7 @@
         <button
           type="button"
           class="btn btn-danger"
-          (click)="showEditExamModal = false"
+          (click)="closeExamEditModal()"
           data-dismiss="modal"
         >
           Close
@@ -795,6 +795,73 @@
       <div class="modal-footer">
         <button type="submit" class="btn btn-danger" (click)="showAddTermModal=false" data-dismiss="modal">Close</button>
       </div>-->
+    </div>
+  </div>
+</div>
+
+<!--Marks List-->
+
+<div class="col-xl-6 third">
+  <div class="card spur-card">
+    <div class="card-header bg-warning text-white">
+      <div class="spur-card-icon">
+        <i class="fas fa-clipboard"></i>
+      </div>
+      <div class="spur-card-title">Your Marks List</div>
+    </div>
+    <div class="card-body">
+      <div class="spinner text-center" *ngIf="!allData">
+        <div
+          class="spinner-grow"
+          style="width: 3rem; height: 3rem"
+          role="status"
+        >
+          <span class="sr-only">Loading...</span>
+        </div>
+      </div>
+      <table class="table table-hover table-in-card" *ngIf="allData &&
+      allData.all.response.length > 0">
+        <thead>
+          <tr>
+            <th scope="col" class="text rank-list"><span>#</span></th>
+            <th scope="col" class="text"><span>Subject</span></th>
+            <th scope="col" class="text"><span>Exam</span></th>
+            <th scope="col" class="text"><span>Term</span></th>
+            <th scope="col" class="text"><span>Marks</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            *ngFor="let val of allData.all.response; let i = index"
+            class="cursor-pointer"
+          >
+            <th scope="row" class="text rank-list">
+              <span>{{ i+1 }}</span>
+            </th>
+            <td class="text">
+              <span>{{ val.subject_name }}</span>
+            </td>
+            <td class="text">
+              <span>{{ val.exam_name }}</span>
+            </td>
+            <td class="text">
+              <span>{{ val.term_name }}</span>
+            </td>
+            <td class="text">
+              <span>{{ val.marks }}</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p
+        class="mt-4 lead"
+        *ngIf="
+          allData &&
+          allData.all.response.length <= 0
+        "
+      >
+        Please enter some marks of the subjects to view this list.
+      </p>
     </div>
   </div>
 </div>

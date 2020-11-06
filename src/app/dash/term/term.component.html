@@ -176,7 +176,6 @@
               [disabled]="!form.valid"
               class="btn btn-primary mr-3"
               type="submit"
-              (click)="showToastr()"
             >
               Submit
             </button>
@@ -184,7 +183,7 @@
         </form>
       </div>
 
-      <!-- Modal footer
+      <!-- Modal footer 
       <div class="modal-footer">
         <button type="submit" class="btn btn-danger" (click)="showTermModal=false" data-dismiss="modal">Close</button>
       </div>-->
@@ -206,7 +205,7 @@
         <p class= "para">Are you sure? This action will remove all subjects in this term as well as all marks related to this term.</p>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-primary" (click)="ondel()" (click)="showToastr2()" data-dismiss="modal">Yes! Delete</button>
+        <button type="button" class="btn btn-primary" (click)="ondel()" data-dismiss="modal">Yes! Delete</button>
         <button type="button" class="btn btn-danger" (click)="deleteTermModal=false" data-dismiss="modal">Close</button>
       </div>
     </div>
@@ -257,7 +256,7 @@
         </div> 
       </div>
       <div class="modal-footer">
-        <button type="submit" class="btn btn-primary" [disabled]="!editTermForm.valid" (click)="showToastr3()" data-dismiss="modal">Save</button>
+        <button type="submit" class="btn btn-primary" [disabled]="!editTermForm.valid" data-dismiss="modal">Save</button>
         <button type="submit" class="btn btn-danger" (click)="showEditTermModal=false" data-dismiss="modal">Close</button>
       </div>
       </form>
