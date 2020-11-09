@@ -53,3 +53,7 @@ a:hover {
 .full-height{
     min-height: 100vh;
 }
+.background-image{
+  background-size: cover;
+  background-position: center;
+}

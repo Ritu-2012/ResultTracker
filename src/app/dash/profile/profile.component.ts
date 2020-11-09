@@ -51,8 +51,12 @@ export class ProfileComponent implements OnInit {
   examData;
   user_id: string;
   pwd: string;
+  marks_id;
+  marks;
 
   form: FormGroup;
+  showEditMarksModal: boolean = false;
+  deleteMarksModal: boolean = false;
   showExamModal: boolean = false;
   showDeleteExamModal: boolean = false;
   showEditExamModal: boolean = false;
@@ -258,6 +262,69 @@ export class ProfileComponent implements OnInit {
     this.form.reset();
   }
 
+  //Delete marks
+
+  
+  openMarksDeleteModal(id) {
+    this.deleteMarksModal = true;
+    this.marks_id = id;
+    console.log("id="+id);
+  }
+
+  ondel() {
+    this.deleteMarksModal = false;
+    console.log(this.user_id);
+    console.log(this.pwd);
+    console.log(this.marks_id);
+    this.profileService
+      .delMarks(parseInt(this.user_id), this.pwd, this.marks_id)
+      .subscribe((response: any) => {
+        console.log(response);
+        if (response.code == 202) {
+          //this.loadTermData();
+          this.toastr.warning('Marks deleted successfully');
+        } else this.toastr.error('Something went wrong!');
+      });
+  }
+
+  //update marks
+
+  editMarksForm: FormGroup = new FormGroup({
+    marks: new FormControl('', [Validators.max(100), Validators.required]),
+  });
+
+  openMarksUpdateModal(id,name){
+    this.showEditMarksModal = true;
+    
+    this.marks_id = id;
+    this.marks = name;
+    this.editMarksForm.get('marks').setValue(this.marks);
+    
+    
+  }
+
+  onEdit() {
+    this.showEditMarksModal = false;
+    this.profileService
+      .editMarks(
+        parseInt(this.user_id),
+        this.pwd,
+        parseInt(this.marks_id),
+        parseInt(this.editMarksForm.value.marks)
+      )
+      .subscribe((response: any) => {
+        if (response.code == 202) {
+          this.toastr.success('Marks updated successfully');
+          this.loadTermData();
+        } else {
+          this.toastr.error('Something went wrong!');
+        }
+      });
+  }
+
+
+
+
   //Delete Exam Structure
   deleteExamForm: FormGroup = new FormGroup({
     exam_id: new FormControl('', Validators.required),
@@ -399,6 +466,9 @@ export class ProfileComponent implements OnInit {
         console.log(this.termData);
       });
   }
+
+  
+
   openTermAddModal() {
     this.showAddTermModal = true;
   }
