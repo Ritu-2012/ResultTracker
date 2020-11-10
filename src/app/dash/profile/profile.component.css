@@ -267,6 +267,12 @@
   overflow: auto;
 }
 
-.new{
-  table-layout: fixed;
+.navbar{
+  width: 95%;
+  box-sizing: border-box;
+  border: 1px solid gold;
+}
+
+.subj{
+  text-align: center;
 }

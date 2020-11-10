@@ -5,6 +5,7 @@ import {
   FormGroup,
   FormControl,
   Validators,
+  AbstractControl,
 } from '@angular/forms';
 import {
   ApexNonAxisChartSeries,
@@ -19,6 +20,9 @@ import {
 import { SubjectService } from '../subject/subject.service';
 import { TermService } from '../term/term.service';
 import { ToastrService } from 'ngx-toastr';
+import { Router } from '@angular/router';
+import { CustomValidators } from 'src/app/login/custom.validators';
+import { CurrencyPipe } from '@angular/common';
 
 export type ChartOptions = {
   series: ApexNonAxisChartSeries;
@@ -51,12 +55,8 @@ export class ProfileComponent implements OnInit {
   examData;
   user_id: string;
   pwd: string;
-  marks_id;
-  marks;
 
   form: FormGroup;
-  showEditMarksModal: boolean = false;
-  deleteMarksModal: boolean = false;
   showExamModal: boolean = false;
   showDeleteExamModal: boolean = false;
   showEditExamModal: boolean = false;
@@ -69,10 +69,13 @@ export class ProfileComponent implements OnInit {
     private subjectService: SubjectService,
     private termService: TermService,
     private fb: FormBuilder,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private router: Router
   ) {
     this.form = this.fb.group({
-      examname: new FormControl('', [Validators.required]),
+      examname: new FormControl('', [Validators.required,
+        CustomValidators.noSpecial,
+        CustomValidators.notNumber]),
       totalexam: new FormControl('', [
         Validators.required,
         Validators.pattern('[0-9]*'),
@@ -210,19 +213,6 @@ export class ProfileComponent implements OnInit {
         .getProfileInfo(this.user_id, this.pwd)
         .subscribe((response: any) => (this.profile = response.response));
 
-        this.profileService
-        .getAllMarksData(this.user_id, this.pwd)
-        .subscribe((response: any) => {
-          this.allData = response;
-          this.loadTermData();
-          console.log(this.allData);
-        });
-
-      this.profileService
-        .getAllBasicData(this.user_id, this.pwd)
-        .subscribe((response: any) => (this.allData = response));
-      this.loadTermData();
-
       this.profileService
         .getAllSubjectData(this.user_id, this.pwd)
         .subscribe((response: any) => {
@@ -232,6 +222,8 @@ export class ProfileComponent implements OnInit {
       this.loadPieChartData();
       this.loadSubjectListAny();
     }
+
+    this.marksLoadData();
 
     this.EditExamForm.get('exam_id').valueChanges.subscribe((val) => {
       //compare value and set other control value
@@ -251,7 +243,24 @@ export class ProfileComponent implements OnInit {
       .subscribe((response: any) => {
         this.PieData = response;
         this.chartData();
-        console.log('p' + this.PieData.response);
+        this.examFilterList = this.PieData.response.reduce(
+          (acc: any[], cur: any) => {
+            return [
+              ...acc,
+              ...Array(Number(cur.exam_no))
+                .fill({
+                  exam_id: cur.ass_id,
+                  exam_name: cur.exam_name,
+                  exam_no: 1,
+                })
+                .map((item, index) => ({ ...item, exam_no: index + 1 })),
+            ];
+          },
+          []
+        );
+        response.response.forEach((element) => {});
+        console.log(this.examFilterList);
+        console.log(this.PieData.response);
       });
   }
   openExamAddModal() {
@@ -261,69 +270,6 @@ export class ProfileComponent implements OnInit {
     this.showExamModal = false;
     this.form.reset();
   }
-
-  //Delete marks
-
-  
-  openMarksDeleteModal(id) {
-    this.deleteMarksModal = true;
-    this.marks_id = id;
-    console.log("id="+id);
-  }
-
-  ondel() {
-    this.deleteMarksModal = false;
-    console.log(this.user_id);
-    console.log(this.pwd);
-    console.log(this.marks_id);
-    this.profileService
-      .delMarks(parseInt(this.user_id), this.pwd, this.marks_id)
-      .subscribe((response: any) => {
-        console.log(response);
-        if (response.code == 202) {
-          //this.loadTermData();
-          this.toastr.warning('Marks deleted successfully');
-        } else this.toastr.error('Something went wrong!');
-      });
-  }
-
-  //update marks
-
-  editMarksForm: FormGroup = new FormGroup({
-    marks: new FormControl('', [Validators.max(100), Validators.required]),
-  });
-
-  openMarksUpdateModal(id,name){
-    this.showEditMarksModal = true;
-    
-    this.marks_id = id;
-    this.marks = name;
-    this.editMarksForm.get('marks').setValue(this.marks);
-    
-    
-  }
-
-  onEdit() {
-    this.showEditMarksModal = false;
-    this.profileService
-      .editMarks(
-        parseInt(this.user_id),
-        this.pwd,
-        parseInt(this.marks_id),
-        parseInt(this.editMarksForm.value.marks)
-      )
-      .subscribe((response: any) => {
-        if (response.code == 202) {
-          this.toastr.success('Marks updated successfully');
-          this.loadTermData();
-        } else {
-          this.toastr.error('Something went wrong!');
-        }
-      });
-  }
-
-
-
 
   //Delete Exam Structure
   deleteExamForm: FormGroup = new FormGroup({
@@ -413,11 +359,10 @@ export class ProfileComponent implements OnInit {
   /*Subject related*/
   addSubjectForm: FormGroup = new FormGroup({
     sub_name: new FormControl('', Validators.required),
-    term_id: new FormControl('', Validators.required),
   });
   termListDropDown;
   loadSubjectListAny() {
-    this.subjectList = undefined;
+    this.subjectListAny = undefined;
     this.subjectService
       .getSubjectList(this.user_id, this.pwd)
       .subscribe((response: any) => {
@@ -427,11 +372,15 @@ export class ProfileComponent implements OnInit {
   changeTermId(e) {
     //console.log(e.target.value);
   }
-  openSubjectModal() {
+  termid;
+  termname;
+  openSubjectModal(id,name) {
     this.addSubjectForm.markAsUntouched();
     this.addSubjectForm.get('sub_name').reset();
     this.termListDropDown = undefined;
     this.showSubjectAddModal = true;
+    this.termid=id;
+    this.termname=name;
     this.subjectService
       .getTermList(this.user_id, this.pwd)
       .subscribe((response: any) => {
@@ -440,10 +389,16 @@ export class ProfileComponent implements OnInit {
   }
   onAddSubject() {
     this.showSubjectAddModal = false;
+    let obj = {
+      term_id:this.termid,
+    sub_name:this.addSubjectForm.controls.sub_name.value
+    };
     this.subjectService
-      .addsub(this.user_id, this.pwd, this.addSubjectForm.value)
+      .addsub(this.user_id, this.pwd, obj)
       .subscribe((response: any) => {
         this.loadSubjectListAny();
+        this.loadTermData();
+        console.log(response);
       });
   }
 
@@ -466,9 +421,6 @@ export class ProfileComponent implements OnInit {
         console.log(this.termData);
       });
   }
-
-  
-
   openTermAddModal() {
     this.showAddTermModal = true;
   }
@@ -483,10 +435,362 @@ export class ProfileComponent implements OnInit {
         this.termService
           .addTerm(this.user_id, this.pwd, this.termAddForm.value)
           .subscribe((response: any) => {
-            if (response.code == 202) this.loadTermData();
-            else this.toastr.error('Something went wrong!');
+            if ((response.code = 202)) {
+              this.toastr.success('Term added successfully');
+              this.loadTermData();
+            }else
+            this.toastr.error("Something went wrong!");
           });
       }
     }
+  }
+
+  ///Delete User
+  delAcc = false;
+  deleteUserForm = new FormGroup({
+    pass: new FormControl('', [
+      Validators.required,
+      Validators.minLength(8),
+      Validators.maxLength(16),
+      CustomValidators.notSpace,
+    ]),
+  });
+  delacc() {
+    this.delAcc = true;
+  }
+  ondel() {
+    this.delAcc = false;
+    console.log(this.deleteUserForm.value);
+    this.profileService
+      .deluser(this.user_id, this.deleteUserForm.get('pass').value)
+      .subscribe((response: any) => {
+        if (response.code == 202) {
+          this.loadSubjectListAny();
+          this.toastr.warning('good bye');
+          this.logOut();
+        } else if (response.code == 351) {
+          this.toastr.error('Incorrect Password');          
+          this.logOut();
+        } else this.toastr.error('Something went wrong!');
+      });
+    this.deleteUserForm.reset();
+  }
+
+  marksLoadData() {
+    this.filteredMarksList = undefined;
+    this.profileService
+      .getAllMarksData(this.user_id, this.pwd)
+      .subscribe((response: any) => {
+        this.allData = response;
+        this.filteredMarksList = this.allData.all.response;
+        this.applyMarksFilter();
+        this.loadTermData();
+      });
+  }
+
+  //Marks add check
+
+  marksobj;
+  marksresponse;
+  MarksTerm;
+  MarksSubject;
+  MarksExam;
+  showMarksModal: boolean = false;
+  FullMarksExam;
+
+  SelectedTermId;
+  SelectedSubId;
+  SelectedAssId;
+  SelectedAssNo;
+  getMarksForm: FormGroup = new FormGroup({
+    term_id: new FormControl('', Validators.required),
+    sub_id: new FormControl('', Validators.required),
+    ass_id: new FormControl('', Validators.required),
+    marks: new FormControl('', [
+      Validators.required,
+      Validators.min(0),
+      (control: AbstractControl) => Validators.max(this.FullMarksExam)(control),
+    ]),
+  });
+  AddMarksOfSubject() {
+    console.log(this.getMarksForm.controls);
+    if (localStorage.getItem('user_id')) {
+      this.user_id = localStorage.getItem('user_id');
+      this.pwd = localStorage.getItem('pwd');
+      this.showExamModal = false;
+      this.marksobj = {
+        marks: parseInt(this.getMarksForm.controls.marks.value),
+        term_id: this.SelectedTermId,
+        sub_id: this.SelectedSubId,
+        ass_id: this.SelectedAssId,
+        ass_no: this.SelectedAssNo,
+        stud_id: parseInt(this.user_id),
+        pass: this.pwd,
+      };
+      console.log(JSON.stringify(this.marksobj));
+      this.profileService
+        .Add_Marks(this.marksobj)
+        .subscribe((response: any) => {
+          if (response.code == 202) {
+            this.toastr.success('Marks added successfully');
+            this.marksLoadData();
+          } else {
+            this.toastr.error('Something went wrong!');
+          }
+          this.closeMarksModal();
+        });
+    }
+  }
+  ontermselect(e) {
+    const found = this.MarksTerm[e.target.value];
+    console.log(found);
+    if (found == undefined) {
+      this.MarksSubject = this.SelectedSubId = undefined;
+    } else {
+      this.SelectedTermId = found.term_id;
+      this.MarksSubject = found.term_sub;
+    }
+    this.MarksExam = this.SelectedAssId = this.SelectedAssNo = this.FullMarksExam = undefined;
+  }
+  onsubselect(e) {
+    const found = this.MarksSubject[e.target.value];
+    console.log(found);
+    if (found == undefined) {
+      this.MarksExam = this.SelectedAssId = this.SelectedAssNo = this.FullMarksExam = undefined;
+    } else {
+      this.SelectedSubId = found.sub_id;
+      this.MarksExam = found.sub_ass;
+    }
+  }
+  onexamselect(e) {
+    this.SelectedAssId = this.MarksExam[e.target.value].ass_id;
+
+    this.SelectedAssNo = this.MarksExam[e.target.value].ass_no;
+    this.FullMarksExam = this.MarksExam[e.target.value].full_marks;
+  }
+  openMarksModal() {
+    this.showMarksModal = true;
+    this.MarksTerm = undefined;
+    this.profileService
+      .markscheckup(this.user_id, this.pwd)
+      .subscribe((response: any) => {
+        this.MarksTerm = response.response;
+        console.log('Pritam' + response.code);
+      });
+  }
+  closeMarksModal() {
+    this.showMarksModal = false;
+    this.MarksTerm = this.SelectedTermId = undefined;
+    this.MarksSubject = this.SelectedSubId = undefined;
+    this.MarksExam = this.SelectedAssId = this.SelectedAssNo = this.FullMarksExam = undefined;
+    this.getMarksForm.markAsUntouched();
+    this.getMarksForm.reset({
+      term_id: '',
+      sub_id: '',
+      ass_id: '',
+      marks: '',
+    });
+  }
+
+  /*Marks Filter*/
+
+  examFilterList;
+  subjectFilterList;
+
+  selectedFilterExamID: Number = -1;
+  selectedFilterExamNo: Number = -1;
+  selectedFilterTerm: Number = -1;
+  selectedFilterSubject: Number = -1;
+
+  filteredMarksList;
+
+  marksFilterModal: boolean = false;
+  openMarksFilterModal() {
+    this.marksFilterModal = true;
+  }
+  closeMarksFilterModal() {
+    this.marksFilterModal = false;
+  }
+
+  onTermFilterSelect(e) {
+    this.subjectFilterList = undefined;
+    this.selectedFilterSubject = -1;
+    if (e.target.value > -1) {
+      this.subjectFilterList = this.termData.response[e.target.value].subjects;
+      this.selectedFilterTerm = this.termData.response[e.target.value].term_id;
+    } else {
+      this.selectedFilterTerm = e.target.value;
+    }
+  }
+  onExamFilterSelect(e) {
+    if (e.target.value > -1) {
+      this.selectedFilterExamID = this.examFilterList[e.target.value].exam_id;
+      this.selectedFilterExamNo = this.examFilterList[e.target.value].exam_no;
+    } else {
+      this.selectedFilterExamID = e.target.value;
+      this.selectedFilterExamNo = e.target.value;
+    }
+  }
+  onSubjectFilterSelect(e) {
+    if (e.target.value > -1) {
+      this.selectedFilterSubject = this.subjectFilterList[
+        e.target.value
+      ].sub_id;
+    } else {
+      this.selectedFilterSubject = e.target.value;
+    }
+  }
+  applyMarksFilter() {
+    this.resetMarksFilter();
+    this.filteredMarksList = this.filteredMarksList.filter((item) => {
+      return (
+        (this.selectedFilterExamID == -1 ||
+          this.selectedFilterExamID == item.exam_id) &&
+        (this.selectedFilterExamNo == -1 ||
+          this.selectedFilterExamNo == item.exam_no) &&
+        (this.selectedFilterSubject == -1 ||
+          this.selectedFilterSubject == item.sub_id) &&
+        (this.selectedFilterTerm == -1 ||
+          this.selectedFilterTerm == item.term_id)
+      );
+    });
+    this.closeMarksFilterModal();
+  }
+  resetMarksFilter(marksFilterForm?) {
+    this.filteredMarksList = this.allData.all.response;
+    if (marksFilterForm) {
+      marksFilterForm.reset();
+
+      this.subjectFilterList = undefined;
+      this.selectedFilterSubject = -1;
+      this.selectedFilterExamNo = -1;
+      this.selectedFilterExamID = -1;
+      this.selectedFilterTerm = -1;
+      this.closeMarksFilterModal();
+    }
+  }
+
+  /* CHANGE PASSWORD*/
+  changePasswordModal: boolean = false;
+  pwdChangeForm = new FormGroup(
+    {
+      old_pass: new FormControl('', [Validators.required]),
+      new_pass: new FormControl('', [
+        Validators.required,
+        Validators.minLength(8),
+        Validators.maxLength(16),
+        CustomValidators.notSpace,
+      ]),
+      cnf_pass: new FormControl('', [Validators.required]),
+    },
+    this.pwdMatchValidator
+  );
+  pwdMatchValidator(frm: FormGroup) {
+    return frm.get('new_pass').value === frm.get('cnf_pass').value
+      ? null
+      : { mismatch: true };
+  }
+  openChangePasswordModal() {
+    this.changePasswordModal = true;
+  }
+  closeChangePasswordModal() {
+    this.changePasswordModal = false;
+    this.pwdChangeForm.reset();
+  }
+  changePassword() {
+    this.profileService
+      .changepassword(
+        this.user_id,
+        this.pwdChangeForm.get('old_pass').value,
+        this.pwdChangeForm.get('new_pass').value
+      )
+      .subscribe((response: any) => {
+        if (response.code == 202) {
+          this.toastr.success(
+            'Please login again using the new password',
+            'Password Changed'
+          );
+          this.logOut();
+        }else if(response.code==351){
+          this.toastr.error("Incorrect password");
+          this.logOut();
+        }else
+        this.toastr.error("Something went wrong!");
+        
+        this.closeChangePasswordModal();
+      });
+  }
+
+  logOut(){
+    localStorage.removeItem("username");
+    localStorage.removeItem("user_id");
+    localStorage.removeItem("pwd");
+    this.router.navigate(['login']);
+  }
+
+
+  //Delete marks
+
+  marks_up_del_id;
+  marks_value;
+  showEditMarksModal: boolean = false;
+  deleteMarksModal: boolean = false;
+  FullMarksEdit;
+  openMarksDeleteModal(id) {
+    this.deleteMarksModal = true;
+    this.marks_up_del_id = id;
+    console.log("id="+id);
+  }
+
+  onDeleteMarks() {
+    this.deleteMarksModal = false;
+    console.log(this.user_id);
+    console.log(this.pwd);
+    console.log(this.marks_up_del_id);
+    this.profileService
+      .delMarks(parseInt(this.user_id), this.pwd, this.marks_up_del_id)
+      .subscribe((response: any) => {
+        console.log(response);
+        if (response.code == 202) {
+          //this.loadTermData();
+          this.toastr.warning('Marks deleted successfully');
+          this.marksLoadData();
+        } else this.toastr.error('Something went wrong!');
+      });
+  }
+
+  //update marks
+
+  editMarksForm: FormGroup = new FormGroup({
+    marks: new FormControl('', [Validators.required,
+      Validators.min(0),
+      (control: AbstractControl) => Validators.max(this.FullMarksEdit)(control),]),
+  });
+
+  openMarksUpdateModal(id,name,full_marks){
+    this.showEditMarksModal = true;
+    this.marks_up_del_id = id;
+    this.marks_value = name;
+    this.FullMarksEdit = full_marks;
+    this.editMarksForm.get('marks').setValue(this.marks_value);
+  }
+
+  onEdit() {
+    this.showEditMarksModal = false;
+    this.profileService
+      .editMarks(
+        parseInt(this.user_id),
+        this.pwd,
+        parseInt(this.marks_up_del_id),
+        parseInt(this.editMarksForm.value.marks)
+      )
+      .subscribe((response: any) => {
+        if (response.code == 202) {
+          this.toastr.success('Marks updated successfully');          
+          this.marksLoadData();
+        } else {
+          this.toastr.error('Something went wrong!');
+        }
+      });
   }
 }
